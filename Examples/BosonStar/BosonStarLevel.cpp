@@ -469,9 +469,9 @@ void BosonStarLevel::computeTaggingCriterion(FArrayBox &tagging_criterion,
                                                const FArrayBox &current_state)
 {
 
-//BoxLoops::loop(ComplexPhiAndChiExtractionTaggingCriterion(m_dx, m_level,
-//                   m_p.mass_extraction_params, m_p.regrid_threshold_phi,
-//                   m_p.regrid_threshold_chi), current_state, tagging_criterion);
+BoxLoops::loop(ComplexPhiAndChiExtractionTaggingCriterion(m_dx, m_level,
+                   m_p.mass_extraction_params, m_p.regrid_threshold_phi,
+                   m_p.regrid_threshold_chi), current_state, tagging_criterion);
 
 //    BoxLoops::loop(ChiandRhoTaggingCriterion(m_dx, m_level,
 //                    m_p.mass_extraction_params, m_p.regrid_threshold_rho,
@@ -479,7 +479,7 @@ void BosonStarLevel::computeTaggingCriterion(FArrayBox &tagging_criterion,
 
 // Be aware of the tagging here, you may want to change it, depending on your problem of interest. Below tagging for when the tracking is activated is 'intense' and specific to binary inspirals. 	
     
-     if (m_p.do_star_track == true)
+/*     if (m_p.do_star_track == true)
     {
         const vector<double> puncture_radii = {m_p.tag_radius_A,
                                                 m_p.tag_radius_B};
@@ -502,5 +502,5 @@ void BosonStarLevel::computeTaggingCriterion(FArrayBox &tagging_criterion,
                    m_p.mass_extraction_params, m_p.regrid_threshold_rho,
                    m_p.regrid_threshold_chi), current_state, tagging_criterion);
    }
-
+*/
 }
