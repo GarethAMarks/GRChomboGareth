@@ -417,8 +417,10 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         superpose_2[2][2] = g_zz_22 + helferLL[2][2] - 1.;
 
         double n_power = conformal_power / 12.0;
-
+	
         double chi_plain = pow(g_xx * g_yy * g_zz, n_power);
+	
+	pout() << "Reached first BS_BH_binary switch in id_choice 2";
 
         if (BS_BH_binary)
         {
@@ -434,10 +436,11 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             //n in our BS-BH correction ansatz. Should probably change to read in from params file
             int correction_power = 1;
 
-            double radial_coord = sqrt(pow(coords.x,2) + pow(coords.y,2) + pow(coords.z,2) + );
+            double radial_coord = sqrt(pow(coords.x - x,2) + pow(coords.y - y,2) + pow(coords.z - z,2) );
 
-            chi_ = chi_plain + separation*(separation - radial_coord )^correction_power/ (pow(separation,correction_power + 1 ) + pow(radial_coord,correction_power + 1));
-
+            chi_ = chi_plain + delta_star*separation*pow(separation - radial_coord, correction_power)/ (pow(separation,correction_power + 1 ) + pow(radial_coord,correction_power + 1));
+	
+	    pout() << "Terminated BS_BH_binary correction factor code";
         }
 
         else
@@ -508,7 +511,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         FOR2(i,j) vars.A[i][j] = pow(chi_plain, - 4.0 / conformal_power)  * (KLL[i][j] - one_third * vars.K * gammaLL[i][j]);
 
         current_cell.store_vars(vars);
-
+	pout()<< "Reached the end of initial data construction";
     }
 }
 
