@@ -93,11 +93,11 @@ void BosonStar::compute(Cell<data_t> current_cell) const
     double z = coords.z; //set /tilde{t} to zero
     double y = coords.y + q * impact_parameter / (q + 1.);
     double r = sqrt(x * x + y * y + z * z);
-    
+
     //hold BS location in event of mixed binary for id_choice = 2, as we'll need it and x,y,z are overwritten
     double x_star = x;
     double y_star = y;
-    double z_star = z;    
+    double z_star = z;
 
     // First star physical variables
     double p_ = m_1d_sol.get_p_interp(r);
@@ -422,9 +422,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         superpose_2[2][2] = g_zz_22 + helferLL[2][2] - 1.;
 
         double n_power = conformal_power / 12.0;
-	
+
         double chi_plain = pow(g_xx * g_yy * g_zz, n_power);
-	
+
 	//pout() << "Reached first BS_BH_binary switch in id_choice 2";
         //id_choice_3 added for testing purposes, a slight modification of the original WF approach.
         if (BS_BH_binary && initial_data_choice == 2)
@@ -441,15 +441,15 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             //n in our BS-BH correction ansatz. Should probably change to read in from params file
             int correction_power = 1;
 
-	    
-	    //radial distance to BS
-            double r_star = sqrt(pow(coords.x - x_star,2) + pow(coords.y - y_star,2) + pow(coords.z - z_star,2) );
+
+            //radial distance to BS
+            double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
 
             //radial distance to BH
-	    double r_hole = sqrt(pow(coords.x - x,2) + pow(coords.y - y,2) + pow (coords.z - z,2));
+            double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
 
-            chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) * exp(-1 / (10 * r_hole * r_hole + 0.00001))/ (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
-	
+            chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
+
 	   // pout() << "Terminated BS_BH_binary correction factor code";
         }
 
@@ -523,6 +523,54 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         current_cell.store_vars(vars);
 	//pout()<< "Reached the end of initial data construction";
     }
+
+    //Modified approach for BS_BH binaries based on Thomas' trick
+    if (initial_data_choice == 4)
+    {
+
+        //radial distance to BS
+        double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
+
+        //radial distance to BH
+        double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
+
+        //spatially varying correction factor, with its width modulated by R
+        double R = 2.;
+        double correction_factor_hole = 1. - tanh(pow(r_hole / R , 2));
+	double correction_factor_star = 0.;
+
+        g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
+        g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
+        g_zz = g_zz_1 + g_zz_2 - 1. + (1. - helferLL[2][2]) * correction_factor_hole + (1. - helferLL2[2][2]) * correction_factor_star;
+
+        //Now, compute upper and lower components
+        gammaLL[0][0] = g_xx;
+        gammaLL[1][1] = g_yy;
+        gammaLL[2][2] = g_zz;
+        gammaUU[0][0] = 1. / g_xx;
+        gammaUU[1][1] = 1. / g_yy;
+        gammaUU[2][2] = 1. / g_zz;
+
+        // Define initial conformal factor
+        chi_ = pow(g_xx * g_yy * g_zz, -1. / 3.);
+
+        vars.chi = chi_;
+
+        // Define initial lapse
+        if (BS_BH_binary){vars.lapse += sqrt(vars.chi);}
+        else if (binary){vars.lapse += sqrt(lapse_1 * lapse_1 + lapse_2 * lapse_2 - 1.);}
+        else{vars.lapse += lapse_1;}
+
+        // Define initial trace of K and A_ij
+        double one_third = 1./3.;
+        FOR2(i,j) vars.h[i][j] = vars.chi * gammaLL[i][j];
+        FOR4(i,j,k,l) KLL[i][j] += gammaLL[i][l] * (gammaUU_1[l][k] * KLL_1[k][j] + gammaUU_2[l][k] * KLL_2[k][j]);
+        FOR2(i,j) vars.K += KLL[i][j] * gammaUU[i][j];
+        FOR2(i,j) vars.A[i][j] = vars.chi * (KLL[i][j] - one_third * vars.K * gammaLL[i][j]);
+
+        current_cell.store_vars(vars);
+    }
+
 }
 
 #endif /* BOSONSTAR_IMPL_HPP_ */
