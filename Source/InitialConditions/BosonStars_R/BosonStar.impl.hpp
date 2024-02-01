@@ -397,9 +397,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double superpose_2[3][3] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
 
         //Start with plain superposed metrics
-        g_xx = g_xx_1 + g_xx_2 - 1.0;
-        g_yy = g_yy_1 + g_yy_2 - 1.0;
-        g_zz = g_zz_1 + g_zz_2 - 1.0;
+        g_xx = g_xx_1 + g_xx_2 - helferLL[0][0];
+        g_yy = g_yy_1 + g_yy_2 - helferLL[1][1];
+        g_zz = g_zz_1 + g_zz_2 - helferLL[2][2];
 
         //metric components of \gamma_A(x_A)
         double g_zz_11 = psi_11 * psi_11;
@@ -441,9 +441,14 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             //n in our BS-BH correction ansatz. Should probably change to read in from params file
             int correction_power = 1;
 
-            double radial_coord = sqrt(pow(coords.x - x_star,2) + pow(coords.y - y_star,2) + pow(coords.z - z_star,2) );
+	    
+	    //radial distance to BS
+            double r_star = sqrt(pow(coords.x - x_star,2) + pow(coords.y - y_star,2) + pow(coords.z - z_star,2) );
 
-            chi_ = chi_plain + delta_star*separation*pow(separation - radial_coord, correction_power)/ (pow(separation,correction_power + 1 ) + pow(radial_coord,correction_power + 1));
+            //radial distance to BH
+	    double r_hole = sqrt(pow(coords.x - x,2) + pow(coords.y - y,2) + pow (coords.z - z,2));
+
+            chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) * exp(-1 / (10 * r_hole * r_hole + 0.00001))/ (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
 	
 	   // pout() << "Terminated BS_BH_binary correction factor code";
         }
