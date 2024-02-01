@@ -535,9 +535,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
 
         //spatially varying correction factor, with its width modulated by R
-        double R = 2.;
-        double correction_factor_hole = 1. - tanh(pow(r_hole / R , 2));
-	double correction_factor_star = 0.;
+        double R = 5.;
+        double correction_factor_hole = 1 - tanh(pow(r_hole / R , 2));
+	double correction_factor_star = 0.5*( 1 - tanh(pow(r_star / R,2)));
 
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
