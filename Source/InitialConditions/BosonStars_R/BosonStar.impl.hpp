@@ -97,9 +97,14 @@ void BosonStar::compute(Cell<data_t> current_cell) const
     double r = sqrt(x * x + y * y + z * z);
 
     //hold BS location in event of mixed binary for id_choice = 2, as we'll need it and x,y,z are overwritten
-    double x_star = x;
+    double x_star = x/c_; //divide by cosh(rapidity) since we want the position in the tilded (lab) frame
     double y_star = y;
     double z_star = z;
+
+    //BH location initialized to zero; filled in if binary
+    double x_hole = 0;
+    double y_hole = 0;
+    double z_hole = 0;
 
     // First star physical variables
     double p_ = m_1d_sol.get_p_interp(r);
@@ -208,6 +213,10 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         z = coords.z;
         y = coords.y - impact_parameter / (q + 1.);
         r = sqrt(x * x + y * y + z * z);
+	
+	x_hole  = x/c_; //hole position in tilded (lab) frame
+	y_hole = y;
+	z_hole = z;
 
         //Second star physical variables
         p_ = m_1d_sol2.get_p_interp(r);
@@ -534,7 +543,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
 
         //radial distance to BH
-        double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
+        double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
         //spatially varying correction factor, with its width modulated by R
         
