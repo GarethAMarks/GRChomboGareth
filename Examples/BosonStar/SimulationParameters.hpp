@@ -62,7 +62,9 @@ public:
         pp.load("radius_width2", bosonstar_params.radius_width2, 20.);
         pp.load("conformal_factor_power", bosonstar_params.conformal_factor_power, -4);
         pp.load("G_Newton", bosonstar_params.Newtons_constant, 1.0);
-        
+	pp.load("BS_bump_radius", bosonstar_params.BS_bump_radius, 10.0);
+	pp.load("BH_bump_radius", bosonstar_params.BH_bump_radius, 10.0);        
+
 	// Initialize values for bosonstar2_params to same as bosonstar_params
         // and then assign that ones that should differ below
         bosonstar2_params = bosonstar_params;

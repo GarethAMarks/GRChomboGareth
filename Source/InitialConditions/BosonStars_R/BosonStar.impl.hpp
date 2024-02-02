@@ -78,6 +78,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
     double radius_width2 = m_params_BosonStar.radius_width2;
     int conformal_power = m_params_BosonStar.conformal_factor_power;
     int initial_data_choice = m_params_BosonStar.id_choice;
+    double R_BS = m_params_BosonStar.BS_bump_radius;
+    double R_BH = m_params_BosonStar.BH_bump_radius;
 
     // Define boosts and coordinate objects, suppose star 1 is on the left of the centre of mass
     // and star 2 is on the right of centre of mass
@@ -535,9 +537,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
 
         //spatially varying correction factor, with its width modulated by R
-        double R = 5.;
-        double correction_factor_hole = 1 - tanh(pow(r_hole / R , 2));
-	double correction_factor_star = 0.5*( 1 - tanh(pow(r_star / R,2)));
+        
+        double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
+	double correction_factor_star = 0.5*( 1 - tanh(pow(r_star / R_BS , 2)));
 
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
