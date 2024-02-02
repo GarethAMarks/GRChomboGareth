@@ -213,7 +213,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         z = coords.z;
         y = coords.y - impact_parameter / (q + 1.);
         r = sqrt(x * x + y * y + z * z);
-	
+
 	x_hole  = x/c_; //hole position in tilded (lab) frame
 	y_hole = y;
 	z_hole = z;
@@ -285,23 +285,39 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double y_p2 = -impact_parameter;
         double r_p2 = sqrt(x_p2 * x_p2 + y_p2 * y_p2 + z_p2 * z_p2);
 
-        // Get physical variables needed for the metric
-        double p_p2 = m_1d_sol2.get_p_interp(r_p2);
-        double dp_p2 = m_1d_sol2.get_dp_interp(r_p2);
-        double omega_p2 = m_1d_sol2.get_lapse_interp(r_p2);
-        double omega_prime_p2 = m_1d_sol2.get_dlapse_interp(r_p2);
-        double psi_p2 = m_1d_sol2.get_psi_interp(r_p2);
-        double psi_prime_p2 = m_1d_sol2.get_dpsi_interp(r_p2);
-        double pc_os_p2 = psi_p2 * psi_p2 * c_ * c_ - omega_p2 * omega_p2 * s_ * s_;
-
-        if (m_identical == 1)
+        //equal mass BS binary: metric disturbances at star centres equal by symmetry
+        if (m_identical == 1 && BS_BH_binary == 0)
         {
             helferLL2[1][1] = psi_p * psi_p;
             helferLL2[2][2] = psi_p * psi_p;
             helferLL2[0][0] = pc_os_p;
         }
+        //BH BS binary case
+        else if (BS_BH_binary)
+        {
+            double r_p2_tilde = sqrt(r_p2  *r_p2 + 10e-10);
+            double omega_p2 = (2. - M / r_p2_tilde) / (2. + M / r_p2_tilde);
+            double omega_prime_p2 = 4. * M / pow(2. * r_p2_tilde + M, 2);
+            double psi_p2 = pow(1. + M/ (2. * r_p2_tilde), 2);
+            double psi_prime_p2 = -(M / (r_p2_tilde * r_p2_tilde)) * (1. + M / (2. * r_p2_tilde));
+            double pc_os_p2 = psi_p2 * psi_p2 * c_ * c_ - omega_p2 * omega_p2 * s_ * s_;
+
+            helferLL2[1][1] = psi_p2 * psi_p2;
+            helferLL2[2][2] = psi_p2 * psi_p2;
+            helferLL2[0][0] = pc_os_p2;
+        }
+        //BS binary case
         else
         {
+            // Get physical variables needed for the metric
+            double p_p2 = m_1d_sol2.get_p_interp(r_p2);
+            double dp_p2 = m_1d_sol2.get_dp_interp(r_p2);
+            double omega_p2 = m_1d_sol2.get_lapse_interp(r_p2);
+            double omega_prime_p2 = m_1d_sol2.get_dlapse_interp(r_p2);
+            double psi_p2 = m_1d_sol2.get_psi_interp(r_p2);
+            double psi_prime_p2 = m_1d_sol2.get_dpsi_interp(r_p2);
+            double pc_os_p2 = psi_p2 * psi_p2 * c_ * c_ - omega_p2 * omega_p2 * s_ * s_;
+
             helferLL2[1][1] = psi_p2 * psi_p2;
             helferLL2[2][2] = psi_p2 * psi_p2;
             helferLL2[0][0] = pc_os_p2;
@@ -546,9 +562,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
         //spatially varying correction factor, with its width modulated by R
-        
+
         double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
-	double correction_factor_star = 0.5*( 1 - tanh(pow(r_star / R_BS , 2)));
+        double correction_factor_star = 0.5*( 1 - tanh(pow(r_star / R_BS , 2)));
 
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
