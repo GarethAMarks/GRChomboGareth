@@ -424,9 +424,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double superpose_2[3][3] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
 
         //Start with plain superposed metrics
-        g_xx = g_xx_1 + g_xx_2 - helferLL[0][0];
-        g_yy = g_yy_1 + g_yy_2 - helferLL[1][1];
-        g_zz = g_zz_1 + g_zz_2 - helferLL[2][2];
+        g_xx = g_xx_1 + g_xx_2 - 1;
+        g_yy = g_yy_1 + g_yy_2 - 1;
+        g_zz = g_zz_1 + g_zz_2 - 1;
 
         //metric components of \gamma_A(x_A)
         double g_zz_11 = psi_11 * psi_11;
@@ -454,7 +454,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 
 	//pout() << "Reached first BS_BH_binary switch in id_choice 2";
         //id_choice_3 added for testing purposes, a slight modification of the original WF approach.
-        if (BS_BH_binary && initial_data_choice == 2)
+        if (BS_BH_binary && (initial_data_choice == 2 || initial_data_choice == 3))
         {
             //This is \chi(x_A) (superposed chi at location of BS)
             double chi_star = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
@@ -480,7 +480,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	   // pout() << "Terminated BS_BH_binary correction factor code";
         }
 
-        else
+        else if (!BS_BH_binary)
         {
                  //This is \chi(x_A)
             double chi_1 = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
@@ -525,7 +525,20 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             chi_ = chi_plain + profile1 * value1 + profile2 * value2;
 
         }
-        // Now, compute upper and lower components
+
+
+        //experimental double fix approach
+        if (BS_BH_binary && initial_data_choice == 3)
+        {
+            //radial distance to BS
+            double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
+            double correction_factor_star = 1 - tanh(pow(r_star / R_BS , 2));
+
+            g_xx += (1. - helferLL2[0][0]) * correction_factor_star;
+            g_yy += (1. - helferLL2[1][1]) * correction_factor_star;
+            g_zz += (1. - helferLL2[2][2]) * correction_factor_star;
+        }
+             // Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
         gammaLL[1][1] = g_yy;
         gammaLL[2][2] = g_zz;
@@ -564,11 +577,19 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         //spatially varying correction factor, with its width modulated by R
 
         double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
-        double correction_factor_star = ( 1 - tanh(pow(r_star / R_BS , 2)));
-
+        double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /** (separation - r_star) * (separation + r_star) / (separation * separation)*/;
+        //double correction_factor_star = R_BS / sqrt(r_star * r_star + R_BS * R_BS);
+	//double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));       
+/*
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
         g_zz = g_zz_1 + g_zz_2 - 1. + (1. - helferLL[2][2]) * correction_factor_hole + (1. - helferLL2[2][2]) * correction_factor_star;
+*/      
+
+	//test code for new idea
+	g_xx = g_xx_1 + g_xx_2 - helferLL[0][0] + (helferLL[0][0] - helferLL2[0][0]) * correction_factor_star;
+        g_yy = g_yy_1 + g_yy_2 - helferLL[1][1] + (helferLL[1][1] - helferLL2[1][1]) * correction_factor_star;
+        g_zz = g_zz_1 + g_zz_2 - helferLL[2][2] + (helferLL[2][2] - helferLL2[2][2]) * correction_factor_star;
 
         //Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
