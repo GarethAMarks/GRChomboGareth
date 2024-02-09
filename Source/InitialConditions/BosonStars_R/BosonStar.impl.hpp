@@ -214,9 +214,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         y = coords.y - impact_parameter / (q + 1.);
         r = sqrt(x * x + y * y + z * z);
 
-	x_hole  = x/c_; //hole position in tilded (lab) frame
-	y_hole = y;
-	z_hole = z;
+        x_hole  = x/c_; //hole position in tilded (lab) frame
+        y_hole = y;
+        z_hole = z;
 
         //Second star physical variables
         p_ = m_1d_sol2.get_p_interp(r);
@@ -409,16 +409,6 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double psi_prime_11 = m_1d_sol.get_dpsi_interp(r_11);
         double pc_os_11 = psi_11 * psi_11 * cosh(rapidity) * cosh(rapidity) - omega_11 * omega_11 * sinh(rapidity) * sinh(rapidity);
 
-        //If one uses fixing conformal trick, we need to have the vales of the metric of star 2 at its centre
-        double r_22 = 0.;
-        double p_22 = m_1d_sol2.get_p_interp(r_22);
-        double dp_22 = m_1d_sol2.get_dp_interp(r_22);
-        double omega_22 = m_1d_sol2.get_lapse_interp(r_22);
-        double omega_prime_22 = m_1d_sol2.get_dlapse_interp(r_22);
-        double psi_22 = m_1d_sol2.get_psi_interp(r_22);
-        double psi_prime_22 = m_1d_sol2.get_dpsi_interp(r_22);
-        double pc_os_22 = psi_22 * psi_22 * cosh(-rapidity2) * cosh(-rapidity2) - omega_22 * omega_22 * sinh(-rapidity2) * sinh(-rapidity2);
-
         //These are to be filled in with plain supporposed metric components evaluated at x_A and x_B respectively
         double superpose_1[3][3] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
         double superpose_2[3][3] = {{0.,0.,0.},{0.,0.,0.},{0.,0.,0.}};
@@ -433,28 +423,18 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double g_yy_11 = psi_11 * psi_11;
         double g_xx_11 = pc_os_11;
 
-        //metric components of \gamma_B(x_B)
-        double g_zz_22 = psi_22 * psi_22;
-        double g_yy_22 = psi_22 * psi_22;
-        double g_xx_22 = pc_os_22;
 
         // This  is \gamma_{ij}(x_A) = \gamma_A(x_A) + \gamma_B(x_A) - 1
         superpose_1[0][0] = g_xx_11 + helferLL2[0][0] - 1.;
         superpose_1[1][1] = g_yy_11 + helferLL2[1][1] - 1.;
         superpose_1[2][2] = g_zz_11 + helferLL2[2][2] - 1.;
 
-        // This  is \gamma_{ij}(x_B) = \gamma_B(x_B) + \gamma_A(x_B) - 1
-        superpose_2[0][0] = g_xx_22 + helferLL[0][0] - 1.;
-        superpose_2[1][1] = g_yy_22 + helferLL[1][1] - 1.;
-        superpose_2[2][2] = g_zz_22 + helferLL[2][2] - 1.;
-
         double n_power = conformal_power / 12.0;
 
         double chi_plain = pow(g_xx * g_yy * g_zz, n_power);
 
-	//pout() << "Reached first BS_BH_binary switch in id_choice 2";
         //id_choice_3 added for testing purposes, a slight modification of the original WF approach.
-        if (BS_BH_binary && (initial_data_choice == 2 || initial_data_choice == 3))
+        if (BS_BH_binary)
         {
             //This is \chi(x_A) (superposed chi at location of BS)
             double chi_star = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
@@ -468,21 +448,38 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             //n in our BS-BH correction ansatz. Should probably change to read in from params file
             int correction_power = 1;
 
-
-            //radial distance to BS
+            //radial distances to BS and BH
             double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
-
-            //radial distance to BH
-            double r_hole = sqrt(pow(x,2) + pow(y,2) + pow (z,2));
+            double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
             chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
-
-	   // pout() << "Terminated BS_BH_binary correction factor code";
         }
 
-        else if (!BS_BH_binary)
+        else
         {
-                 //This is \chi(x_A)
+             //If one uses fixing conformal trick, we need to have the vales of the metric of star 2 at its centre
+
+            double r_22 = 0.;
+            double p_22 = m_1d_sol2.get_p_interp(r_22);
+            double dp_22 = m_1d_sol2.get_dp_interp(r_22);
+            double omega_22 = m_1d_sol2.get_lapse_interp(r_22);
+            double omega_prime_22 = m_1d_sol2.get_dlapse_interp(r_22);
+            double psi_22 = m_1d_sol2.get_psi_interp(r_22);
+            double psi_prime_22 = m_1d_sol2.get_dpsi_interp(r_22);
+            double pc_os_22 = psi_22 * psi_22 * cosh(-rapidity2) * cosh(-rapidity2) - omega_22 * omega_22 * sinh(-rapidity2) * sinh(-rapidity2);
+
+            //metric components of \gamma_B(x_B)
+            double g_zz_22 = psi_22 * psi_22;
+            double g_yy_22 = psi_22 * psi_22;
+            double g_xx_22 = pc_os_22;
+
+            // This  is \gamma_{ij}(x_B) = \gamma_B(x_B) + \gamma_A(x_B) - 1
+            superpose_2[0][0] = g_xx_22 + helferLL[0][0] - 1.;
+            superpose_2[1][1] = g_yy_22 + helferLL[1][1] - 1.;
+            superpose_2[2][2] = g_zz_22 + helferLL[2][2] - 1.;
+
+
+            //This is \chi(x_A)
             double chi_1 = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
             //This is \chi(x_B)
             double chi_2 = pow(superpose_2[0][0] * superpose_2[1][1] * superpose_2[2][2], n_power);
@@ -501,7 +498,6 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             double delta_1 = chi1_1 - chi_1;
             //This is \delta_B
             double delta_2 = chi2_2 - chi_2;
-
 
 
             //Find all the profile functions needed
@@ -527,7 +523,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         }
 
 
-        //experimental double fix approach
+        //experimental "double fix" approach
         if (BS_BH_binary && initial_data_choice == 3)
         {
             //radial distance to BS
@@ -538,7 +534,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             g_yy += (1. - helferLL2[1][1]) * correction_factor_star;
             g_zz += (1. - helferLL2[2][2]) * correction_factor_star;
         }
-             // Now, compute upper and lower components
+
+        // Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
         gammaLL[1][1] = g_yy;
         gammaLL[2][2] = g_zz;
@@ -561,7 +558,6 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         FOR2(i,j) vars.A[i][j] = pow(chi_plain, - 4.0 / conformal_power)  * (KLL[i][j] - one_third * vars.K * gammaLL[i][j]);
 
         current_cell.store_vars(vars);
-	//pout()<< "Reached the end of initial data construction";
     }
 
     //Modified approach for BS_BH binaries based on Thomas' trick
@@ -577,17 +573,18 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         //spatially varying correction factor, with its width modulated by R
 
         double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
-        double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /** (separation - r_star) * (separation + r_star) / (separation * separation)*/;
+        double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /* * (separation - r_star) * (separation + r_star) / (separation * separation)*/;
         //double correction_factor_star = R_BS / sqrt(r_star * r_star + R_BS * R_BS);
-	//double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));       
-/*
+        //double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));
+
+/*      //original two-bump-function approach
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - 1. + (1. - helferLL[1][1]) * correction_factor_hole + (1. - helferLL2[1][1]) * correction_factor_star;
         g_zz = g_zz_1 + g_zz_2 - 1. + (1. - helferLL[2][2]) * correction_factor_hole + (1. - helferLL2[2][2]) * correction_factor_star;
-*/      
+*/
 
-	//test code for new idea
-	g_xx = g_xx_1 + g_xx_2 - helferLL[0][0] + (helferLL[0][0] - helferLL2[0][0]) * correction_factor_star;
+        //test code for new one-bump-function (non asymptotically flat) idea
+        g_xx = g_xx_1 + g_xx_2 - helferLL[0][0] + (helferLL[0][0] - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - helferLL[1][1] + (helferLL[1][1] - helferLL2[1][1]) * correction_factor_star;
         g_zz = g_zz_1 + g_zz_2 - helferLL[2][2] + (helferLL[2][2] - helferLL2[2][2]) * correction_factor_star;
 
