@@ -435,7 +435,22 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 
         //id_choice_3 added for testing purposes, a slight modification of the original WF approach.
         if (BS_BH_binary)
-        {
+        {   
+
+	    //experimental: start from TT metric for correction at BS location instead of plain superposition
+            g_xx += 1 - helferLL2[0][0];
+	    g_yy += 1 - helferLL2[1][1];
+	    g_zz += 1 - helferLL2[2][2];
+			
+	    /*
+	    superpose_1[0][0] += 1 - helferLL2[0][0];
+            superpose_1[1][1] += 1 - helferLL2[1][1];
+            superpose_1[2][2] += 1 - helferLL2[2][2];
+	    */
+            
+           //without this line there is a problem (h wont have unit determinant) but seems to work better. Figure out why!
+	    chi_plain = pow(g_xx * g_yy * g_zz, n_power);
+ 
             //This is \chi(x_A) (superposed chi at location of BS)
             double chi_star = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
 
@@ -452,8 +467,10 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
             double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
-            chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
-        }
+            //chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
+	    chi_ = chi_plain + delta_star * R_BS / sqrt(R_BS * R_BS + r_star * r_star)*exp( - R_BH * R_BH / (r_hole * r_hole + 0.001 ) );        
+
+}
 
         else
         {
@@ -519,6 +536,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             double value2 = (profile_11 * delta_2 - profile_12 * delta_1)/(profile_11 * profile_22 - profile_12 * profile_21);
 
             chi_ = chi_plain + profile1 * value1 + profile2 * value2;
+	    chi_ = chi_plain;
 
         }
 
@@ -534,6 +552,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             g_yy += (1. - helferLL2[1][1]) * correction_factor_star;
             g_zz += (1. - helferLL2[2][2]) * correction_factor_star;
         }
+        
 
         // Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
@@ -549,6 +568,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         if (BS_BH_binary){vars.lapse += sqrt(vars.chi);}
         else if (binary){vars.lapse += sqrt(lapse_1 * lapse_1 + lapse_2 * lapse_2 - 1.);}
         else{vars.lapse += lapse_1;}
+
+	//chi_plain = pow(g_xx * g_yy * g_zz, n_power);
 
         // Define initial trace of K and A_ij
         double one_third = 1./3.;
@@ -573,8 +594,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         //spatially varying correction factor, with its width modulated by R
 
         double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
-        double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /* * (separation - r_star) * (separation + r_star) / (separation * separation)*/;
-        //double correction_factor_star = R_BS / sqrt(r_star * r_star + R_BS * R_BS);
+        //double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /* * (separation - r_star) * (separation + r_star) / (separation * separation)*/;
+        double correction_factor_star = R_BS / sqrt(r_star * r_star + R_BS * R_BS);
         //double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));
 
 /*      //original two-bump-function approach
