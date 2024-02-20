@@ -364,9 +364,9 @@ void BosonStar::compute(Cell<data_t> current_cell) const
     //Thomas' trick
     if (initial_data_choice == 1)
     {
-        g_xx = g_xx_1 + g_xx_2 - helferLL[0][0];
-        g_yy = g_yy_1 + g_yy_2 - helferLL[1][1];
-        g_zz = g_zz_1 + g_zz_2 - helferLL[2][2];
+        g_xx = g_xx_1 + g_xx_2 - helferLL2[0][0];
+        g_yy = g_yy_1 + g_yy_2 - helferLL2[1][1];
+        g_zz = g_zz_1 + g_zz_2 - helferLL2[2][2];
 
         //Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
@@ -436,7 +436,27 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         //id_choice_3 added for testing purposes, a slight modification of the original WF approach.
         if (BS_BH_binary)
         {   
+		
+	    //metric variables at BH center
+	    double r_22 = 10e-10;
+            double omega_22 = (2. - M / r_22) / (2. + M / r_22);
+            double omega_prime_22 = 4. * M / pow(2. * r_22 + M, 2);
+            double psi_22 = pow(1. + M/ (2. * r_22), 2);
+            double psi_prime_22 = -(M / (r_22 * r_22)) * (1. + M / (2. * r_22));
+            double pc_os_22 = psi_22 * psi_22 * c_ * c_ - omega_22 * omega_22 * s_ * s_;
 
+	    //metric components of \gamma_B(x_B)
+            double g_zz_22 = psi_22 * psi_22;
+            double g_yy_22 = psi_22 * psi_22;
+            double g_xx_22 = pc_os_22;
+
+            // This  is \gamma_{ij}(x_B) = \gamma_B(x_B) + \gamma_A(x_B) - 1
+            superpose_2[0][0] = g_xx_22 + helferLL[0][0] - 1.;
+            superpose_2[1][1] = g_yy_22 + helferLL[1][1] - 1.;
+            superpose_2[2][2] = g_zz_22 + helferLL[2][2] - 1.;
+
+
+		
 	    //experimental: start from TT metric for correction at BS location instead of plain superposition
             g_xx += 1 - helferLL2[0][0];
 	    g_yy += 1 - helferLL2[1][1];
@@ -454,11 +474,22 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             //This is \chi(x_A) (superposed chi at location of BS)
             double chi_star = pow(superpose_1[0][0] * superpose_1[1][1] * superpose_1[2][2], n_power);
 
+	    //and \chi(x_B) (superposed chi at location of BH)
+	    double chi_hole = pow(superpose_2[0][0] * superpose_2[1][1] * superpose_2[2][2], n_power);
+	
+		
+
             //This is \chi_A(x_A) (old chi for star on its own)
             double chi_star_old = pow(g_xx_11 * g_yy_11 * g_zz_11, n_power);
+	    
+            //and \chi_B(x_B)
+	    double chi_hole_old = pow(g_xx_22 * g_yy_22 * g_zz_22, n_power);
+
 
             // This is delta \chi(x_A)
             double delta_star = chi_star_old - chi_star;
+	    // This is delta \chi(x_B)
+            double delta_hole = chi_hole_old - chi_hole;
 
             //n in our BS-BH correction ansatz. Should probably change to read in from params file
             int correction_power = 1;
@@ -468,7 +499,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
             //chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
-	    chi_ = chi_plain + delta_star * R_BS / sqrt(R_BS * R_BS + r_star * r_star)*exp( - R_BH * R_BH / (r_hole * r_hole + 0.001 ) );        
+	    chi_ = chi_plain + delta_hole * R_BH / sqrt(R_BH * R_BH + r_hole * r_hole);        
 
 }
 
@@ -596,7 +627,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         double correction_factor_hole = 1 - tanh(pow(r_hole / R_BH , 2));
         //double correction_factor_star = (1 - tanh(pow(r_star / R_BS , 2))) /* * (separation - r_star) * (separation + r_star) / (separation * separation)*/;
         double correction_factor_star = R_BS / sqrt(r_star * r_star + R_BS * R_BS);
-        //double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));
+        //double correction_factor_hole = R_BH / sqrt(r_hole * r_hole + R_BH * R_BH);
+	//double correction_factor_star = 0.5*(1 - tanh(r_star * r_star - R_BS * R_BS));
 
 /*      //original two-bump-function approach
         g_xx = g_xx_1 + g_xx_2 - 1. + (1. - helferLL[0][0]) * correction_factor_hole + (1. - helferLL2[0][0]) * correction_factor_star;
@@ -605,10 +637,15 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 */
 
         //test code for new one-bump-function (non asymptotically flat) idea
+
         g_xx = g_xx_1 + g_xx_2 - helferLL[0][0] + (helferLL[0][0] - helferLL2[0][0]) * correction_factor_star;
         g_yy = g_yy_1 + g_yy_2 - helferLL[1][1] + (helferLL[1][1] - helferLL2[1][1]) * correction_factor_star;
         g_zz = g_zz_1 + g_zz_2 - helferLL[2][2] + (helferLL[2][2] - helferLL2[2][2]) * correction_factor_star;
 
+/*	g_xx = g_xx_1 + g_xx_2 - helferLL2[0][0] + (helferLL2[0][0] - helferLL[0][0]) * correction_factor_hole;
+        g_yy = g_yy_1 + g_yy_2 - helferLL2[1][1] + (helferLL2[1][1] - helferLL[1][1]) * correction_factor_hole;
+        g_zz = g_zz_1 + g_zz_2 - helferLL2[2][2] + (helferLL2[2][2] - helferLL[2][2]) * correction_factor_hole;
+*/
         //Now, compute upper and lower components
         gammaLL[0][0] = g_xx;
         gammaLL[1][1] = g_yy;
