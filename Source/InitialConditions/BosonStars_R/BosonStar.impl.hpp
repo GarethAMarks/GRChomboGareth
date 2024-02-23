@@ -438,7 +438,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         {   
 		
 	    //metric variables at BH center
-	    double r_22 = 10e-10;
+	    double r_22 = M;
             double omega_22 = (2. - M / r_22) / (2. + M / r_22);
             double omega_prime_22 = 4. * M / pow(2. * r_22 + M, 2);
             double psi_22 = pow(1. + M/ (2. * r_22), 2);
@@ -499,7 +499,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
 
             //chi_ = chi_plain + delta_star*separation*pow(separation - r_star, correction_power) / (pow(separation,correction_power + 1 ) + pow(r_star,correction_power + 1));
-	    chi_ = chi_plain + delta_hole * R_BH / sqrt(R_BH * R_BH + r_hole * r_hole);        
+	    chi_ = chi_plain + delta_hole * R_BH / sqrt(R_BH * R_BH + (r_hole - M) * (r_hole - M));        
 
 }
 
