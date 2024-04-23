@@ -824,14 +824,21 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 
 	//radial distance to BH and weight function value
         double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
-	double TPFactor = R_BH / sqrt(R_BH * R_BH + R_BS * R_BS);	
+	//double TPFactor = R_BH / sqrt(R_BH * R_BH + r_hole * r_hole);	
+
+	double TPFactor = 1 - tanh(r_hole * r_hole /( R_BH * R_BH));
+
+	//ensure TPFactor dies off entirely around BS center (where TP solution diverges)
+	double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
+	if (r_star < R_BS)
+	    TPFactor = 0;
 	
 	//apply TP correction to physical metric and extrinsic curvature
 	FOR2(i,j) gammaLLFinal[i][j] = gammaThomas[i][j] + TPFactor * (gamma_TP[i][j] - gammaThomas[i][j]);
 	FOR2(i,j) KLL[i][j] = KLLThomas[i][j] + TPFactor * (K_TP[i][j] - KLLThomas[i][j]);
 
 	//get corrected chi and inverse metric
-	vars.chi = pow(TensorAlgebra::compute_determinant_sym(gammaLLFinal), -4.0 / conformal_power);
+	vars.chi = pow(TensorAlgebra::compute_determinant_sym(gammaLLFinal), -1.0 / 3.0);
 	gammaUUFinal = TensorAlgebra::compute_inverse_sym(gammaLLFinal);
 	 	
 
