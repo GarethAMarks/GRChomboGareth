@@ -11,8 +11,10 @@
 #endif
 
 GRCHOMBO_SOURCE = ../../Source
-
+TWOPUNCTURES_SOURCE = ../../../TwoPunctures/Source
 ebase := Main_BosonStar
+
+XTRALIBFLAGS = -lgsl
 
 LibNames := AMRTimeDependent AMRTools BoxTools
 
@@ -24,7 +26,10 @@ src_dirs := $(GRCHOMBO_SOURCE)/utils \
             $(GRCHOMBO_SOURCE)/GRChomboCore  \
             $(GRCHOMBO_SOURCE)/TaggingCriteria  \
             $(GRCHOMBO_SOURCE)/AMRInterpolator  \
+	    $(GRCHOMBO_SOURCE)/InitialConditions/BlackHoles  \
+	    $(GRCHOMBO_SOURCE)/BlackHoles  \
             $(GRCHOMBO_SOURCE)/InitialConditions/BosonStars_R  \
-						$(GRCHOMBO_SOURCE)/InitialConditions/BosonStars_R/SingleStar
+						$(GRCHOMBO_SOURCE)/InitialConditions/BosonStars_R/SingleStar \
+$(TWOPUNCTURES_SOURCE)
 
 include $(CHOMBO_HOME)/mk/Make.test
