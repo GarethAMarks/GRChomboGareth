@@ -770,11 +770,6 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         // Define initial conformal factor
         double  chiThomas = pow(g_xx * g_yy * g_zz, -1. / 3.);
 
-        // Define initial lapse
-        if (BS_BH_binary){vars.lapse += sqrt(vars.chi);}
-        else if (binary){vars.lapse += sqrt(lapse_1 * lapse_1 + lapse_2 * lapse_2 - 1.);}
-        else{vars.lapse += lapse_1;}
-
 
         //pout() << "Started New Section" << endl;
 
@@ -801,7 +796,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	
 	//pout() << "Survived Pre-Interpolation" << endl;
 	    
-	//TP::TwoPunctures two_punctures;
+	//Read TwoPunctures data from the TPAMR initialized in Main
 	TPAMR_HPP_::bh_amr.m_two_punctures.Interpolate(coords_array, TP_state);	
 	
 	//pout() << "Survived Interpolation Step" << endl;
@@ -821,6 +816,8 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         K_TP[1][1] = TP_state[K22];
         K_TP[1][2] = K_TP[2][1] = TP_state[K23];
         K_TP[2][2] = TP_state[K33];
+	
+	lapseTP = TP_state[lapse];	
 
 	//radial distance to BH and weight function value
         double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
@@ -836,11 +833,16 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	//apply TP correction to physical metric and extrinsic curvature
 	FOR2(i,j) gammaLLFinal[i][j] = gammaThomas[i][j] + TPFactor * (gamma_TP[i][j] - gammaThomas[i][j]);
 	FOR2(i,j) KLL[i][j] = KLLThomas[i][j] + TPFactor * (K_TP[i][j] - KLLThomas[i][j]);
+	FOR2(i,j) KLL[i][j] = KLLThomas[i][j]; //test (remove me)
+	
+	//vars.lapse = vars.lapse + TPFactor * (lapseTP - vars.lapse); 
 
 	//get corrected chi and inverse metric
 	vars.chi = pow(TensorAlgebra::compute_determinant_sym(gammaLLFinal), -1.0 / 3.0);
 	gammaUUFinal = TensorAlgebra::compute_inverse_sym(gammaLLFinal);
 	 	
+	//initial lapse
+	vars.lapse += sqrt(vars.chi);
 
 	//finally reconstruct h and A vars
 	double one_third = 1./3.;

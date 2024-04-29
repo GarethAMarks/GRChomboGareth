@@ -5,7 +5,7 @@ verbosity = 0
 
 chk_prefix = BosonChk_
 plot_prefix = Bosonp_
-#restart_file = BosonChk_000030.3d.hdf5
+#restart_file = BosonChk_000015.3d.hdf5
 
 hdf5_subpath = "hdf5"
 pout_subpath = "pout"
@@ -36,10 +36,10 @@ regrid_threshold_rho = 0.1
 
 ##############################################################
 # BosonStar Initial data parameters
-identical = 1
-mass_ratio = 1
+identical = 0
+mass_ratio = 1.0
 n_power = 2
-id_choice = 4
+id_choice = 6
 central_amplitude_CSF = 0.17 # 0.17 # 0.02820947917 #0.0733 # 0.02820947917 # 0.0733 # near kaup limit
 central_amplitude_CSF2 = 0.17
 phase = 0.0
@@ -59,8 +59,8 @@ BS_mass = 0.3606
 BS_mass2 = 0.3606
 
 #Width of the bump functions for BS-BH initial data
-BS_bump_radius = 10
-BH_bump_radius = 10
+BS_bump_radius = 2
+BH_bump_radius = 0.5
 
 tag_radius_A = 4.48
 tag_radius_B = 4.48
@@ -238,6 +238,46 @@ star_track_centre = 512 512 0 # deafults to L/2 L/2 L/2
 star_track_level = 5
 direction_of_motion = "x" 
  
+#################################################
+# Two Punctures parameters
+
+# Main BH params
+# Either calculate target masses or set bare masses explicitly below
+TP_calculate_target_masses = true
+TP_target_mass_plus = 0.3606
+TP_target_mass_minus = 0.3606
+# TP_adm_tol = 1e-10
+# TP_mass_plus = 0.3606
+# TP_mass_minus = 0.3606
+# offset in x direction (or z if TP_swap_xz set true)
+TP_offset_plus = 8.0
+TP_offset_minus = -8.0
+#TP_swap_xz = false
+TP_momentum_plus = -0.03624 0.0 0.0
+TP_momentum_minus = 0.003624 -0.0 0.0
+TP_spin_plus = 0.0 0.0 0.0
+TP_spin_minus = 0.0 0.0 0.0
+
+# Solver params
+# TP_npoints_A = 30
+# TP_npoints_B = 30
+# TP_npoints_phi = 16;
+# TP_Newton_tol = 1e-10
+# TP_Newton_maxit = 5
+TP_epsilon = 1e-6
+# TP_Tiny = 0.0
+# TP_Extend_Radius = 0.0
+
+# Initial data params
+TP_use_spectral_interpolation = true
+TP_initial_lapse = psi^n
+TP_initial_lapse_psi_exponent = -2.0
+
+# Debug output
+# TP_do_residuum_debug_output = false
+# TP_do_initial_debug_output = false
+
+#################################################
  
  
  
