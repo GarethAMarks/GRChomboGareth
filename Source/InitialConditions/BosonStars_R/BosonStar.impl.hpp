@@ -833,7 +833,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	//apply TP correction to physical metric and extrinsic curvature
 	FOR2(i,j) gammaLLFinal[i][j] = gammaThomas[i][j] + TPFactor * (gamma_TP[i][j] - gammaThomas[i][j]);
 	FOR2(i,j) KLL[i][j] = KLLThomas[i][j] + TPFactor * (K_TP[i][j] - KLLThomas[i][j]);
-	FOR2(i,j) KLL[i][j] = KLLThomas[i][j]; //test (remove me)
+	//FOR2(i,j) KLL[i][j] = KLLThomas[i][j]; //test (remove me)
 	
 	//vars.lapse = vars.lapse + TPFactor * (lapseTP - vars.lapse); 
 
