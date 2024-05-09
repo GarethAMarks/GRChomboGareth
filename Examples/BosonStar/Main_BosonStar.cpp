@@ -31,13 +31,14 @@ int runGRChombo(int argc, char *argv[])
     GRParmParse pp(argc - 2, argv + 2, NULL, in_file);
     SimulationParameters sim_params(pp);
 
-    if (true)//replace with preprocessor conditional on USE_TWOPUNCTURES
-    {
+    #ifdef USE_TWOPUNCTURES
+
 	//TPAMR bh_amr;
         bh_amr.set_two_punctures_parameters(sim_params.tp_params);
-        // Run TwoPunctures solver
-        bh_amr.m_two_punctures.Run();	
-    }
+        // Run TwoPunctures solver if id_choice is appropriate
+	if (sim_params.bosonstar_params.id_choice == 6)
+            bh_amr.m_two_punctures.Run();	
+    #endif
 
 
     // The line below selects the problem that is simulated

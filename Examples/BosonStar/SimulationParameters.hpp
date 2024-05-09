@@ -26,12 +26,14 @@ public:
         readParams(pp);
     }
 
+    #ifdef USE_TWOPUNCTURES
     double tp_offset_plus, tp_offset_minus;
    
     //param sets for TP data and each boosted BH
     TP::Parameters tp_params;
     BoostedBH::params_t bh2_params;
     BoostedBH::params_t bh1_params;
+    #endif
 
     void readParams(GRParmParse &pp)
     {
@@ -183,6 +185,8 @@ public:
         pp.load("flux_extraction_radii", angmomflux_params.radii,
                                                 angmomflux_params.number_radii);*/
 
+        #ifdef USE_TWOPUNCTURES
+
     	tp_params.verbose = (verbosity > 0);	
 	 
 	bool calculate_target_masses;
@@ -317,7 +321,7 @@ public:
         tp_params.mm = 0;
         tp_params.mp_adm = 0;
         tp_params.mm_adm = 0;
-	
+	#endif
 
     }
 
