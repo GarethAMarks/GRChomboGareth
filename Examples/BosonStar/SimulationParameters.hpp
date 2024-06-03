@@ -27,8 +27,8 @@ public:
     }
 
     #ifdef USE_TWOPUNCTURES
-    double tp_offset_plus, tp_offset_minus;
-   
+    double tp_offset_plus, tp_offset_minus;  
+
     //param sets for TP data and each boosted BH
     TP::Parameters tp_params;
     BoostedBH::params_t bh2_params;
@@ -187,8 +187,18 @@ public:
 
         #ifdef USE_TWOPUNCTURES
 
+	double v1 = tanh(bosonstar_params.BS_rapidity);
+	double v2 = -tanh(bosonstar2_params.BS_rapidity);
+	
+	double gamma1 = 1 / sqrt ( 1 - v1 * v1);
+	double gamma2 = 1 / sqrt ( 1 - v2 * v2);
+
     	tp_params.verbose = (verbosity > 0);	
 	 
+	double q = bosonstar_params.mass_ratio;
+        double d = bosonstar_params.BS_separation;
+
+	
 	bool calculate_target_masses;
         pp.load("TP_calculate_target_masses", calculate_target_masses, false);
         tp_params.give_bare_mass = !calculate_target_masses;
@@ -196,8 +206,8 @@ public:
 	// masses
         if (calculate_target_masses)
         {
-            pp.load("TP_target_mass_plus", tp_params.target_M_plus);
-            pp.load("TP_target_mass_minus", tp_params.target_M_minus);
+            pp.load("TP_target_mass_plus", tp_params.target_M_plus, bosonstar_params.mass);
+            pp.load("TP_target_mass_minus", tp_params.target_M_minus, bosonstar_params.BlackHoleMass);
             pp.load("TP_adm_tol", tp_params.adm_tol, 1e-10);
             pout() << "The black holes have target ADM masses of "
                    << tp_params.target_M_plus << " and "
@@ -209,8 +219,8 @@ public:
         {
             pp.load("TP_mass_plus", tp_params.par_m_plus);
             pp.load("TP_mass_minus", tp_params.par_m_minus);
-            bh1_params.mass = tp_params.par_m_plus;
-            bh2_params.mass = tp_params.par_m_minus;
+            bh2_params.mass = tp_params.par_m_plus;
+            bh1_params.mass = tp_params.par_m_minus;
             pout() << "The black holes have bare masses of "
                    << std::setprecision(16) << tp_params.par_m_plus << " and "
                    << tp_params.par_m_minus << "\n";
@@ -219,9 +229,12 @@ public:
         }
 
 	// BH spin and momenta
+	std::array<double,3> momentum1{bosonstar_params.mass * gamma1 * v1, 0, 0};
+	std::array<double,3> momentum2{bosonstar_params.BlackHoleMass * gamma2 * v2, 0, 0};
+	
         std::array<double, CH_SPACEDIM> spin_minus, spin_plus;
-        pp.load("TP_momentum_minus", bh1_params.momentum);
-        pp.load("TP_momentum_plus", bh2_params.momentum);
+        pp.load("TP_momentum_minus", bh1_params.momentum, momentum1);
+        pp.load("TP_momentum_plus", bh2_params.momentum, momentum2);
         pp.load("TP_spin_plus", spin_plus);
         pp.load("TP_spin_minus", spin_minus);
         FOR(i)
@@ -288,8 +301,8 @@ public:
         pp.load("TP_Extend_Radius", tp_params.TP_Extend_Radius, 0.0);
 
         // BH positions
-        pp.load("TP_offset_minus", tp_offset_minus);
-        pp.load("TP_offset_plus", tp_offset_plus);
+        pp.load("TP_offset_minus", tp_offset_minus, - d / (q + 1));
+        pp.load("TP_offset_plus", tp_offset_plus, q * d / (q + 1));
         bh1_params.center = center;
         bh2_params.center = center;
         bh1_params.center[0] += tp_offset_minus;
