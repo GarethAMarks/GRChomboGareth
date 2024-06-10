@@ -55,6 +55,8 @@ BS_binary = true # make false for one star
 BS_BH_binary = true
 BlackHoleMass = 0.3606 # makes an isotropic black hole at the offset position, make sure BS_separation =/= 0
 
+do_rotation = 0
+
 BS_mass = 0.3606
 BS_mass2 = 0.3606
 

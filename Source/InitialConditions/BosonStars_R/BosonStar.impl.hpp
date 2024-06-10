@@ -786,21 +786,48 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	Tensor<2, double> gamma_TP, K_TP, KLLFinal, gammaLLFinal, gammaUUFinal;
     	Tensor<1, double> shiftTP, Z3TP;
     	double lapseTP, ThetaTP;
+	
 
+	//radial distance to BH and weight function value
+        double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
+        //double TPFactor = R_BH / sqrt(R_BH * R_BH + r_hole * r_hole);
+
+        double TPFactor = 1 - tanh(r_hole * r_hole /( R_BH * R_BH));
+
+        //ensure TPFactor dies off entirely around BS center (where TP solution diverges)
+        double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
+        if (r_star < R_BS)
+            TPFactor = 0;
+
+
+	//want to rotate these
 	double coords_array[CH_SPACEDIM];
     	coords_array[0] = coords.x;
     	coords_array[1] = coords.y;
     	coords_array[2] = coords.z;
 
+	//amount the original configuration has been  rotated relative to x-axis parallel config. assumes impact param/ separation > 0
+	double rotation_angle = asin(impact_parameter / sqrt(separation * separation + impact_parameter * impact_parameter ));
+
+        //pout() << "Rotation angle = " << rotation_angle << ", coords = " <<coords.x << ", " << coords.y << ", " << coords.z << endl;
+	//pout() << "x_star = " << x_star << ", x_hole = "<< x_hole << endl;
+
+ 	//rotate by -rotation_angle to obtain coordinates of source point in TP system-- cut off at large r_hole is an ad hoc solution to prevent accessing illegal coordinates at corners for now
+	if (m_params_BosonStar.do_rotation && r_hole < R_BH * 25)
+	{
+	coords_array[0] = cos(rotation_angle) * coords.x + sin(rotation_angle) * coords.y;
+	coords_array[1] = -sin(rotation_angle) * coords.x + cos(rotation_angle) * coords.y;
+	
+	}	
+
 	using namespace TP::Z4VectorShortcuts;
         double TP_state[Qlen];
 	
-	//pout() << "Survived Pre-Interpolation" << endl;
 	    
 	//Read TwoPunctures data from the TPAMR initialized in Main
 	TPAMR_HPP_::bh_amr.m_two_punctures.Interpolate(coords_array, TP_state);	
 	
-	//pout() << "Survived Interpolation Step" << endl;
+	
 
 	// TP metric
         gamma_TP[0][0] = TP_state[g11];
@@ -820,17 +847,6 @@ void BosonStar::compute(Cell<data_t> current_cell) const
 	
 	lapseTP = TP_state[lapse];	
 
-	//radial distance to BH and weight function value
-        double r_hole = sqrt(pow(x_hole,2) + pow(y_hole,2) + pow (z_hole,2));
-	//double TPFactor = R_BH / sqrt(R_BH * R_BH + r_hole * r_hole);	
-
-	double TPFactor = 1 - tanh(r_hole * r_hole /( R_BH * R_BH));
-
-	//ensure TPFactor dies off entirely around BS center (where TP solution diverges)
-	double r_star = sqrt(pow(x_star,2) + pow(y_star,2) + pow(z_star,2) );
-	if (r_star < R_BS)
-	    TPFactor = 0;
-	
 	//apply TP correction to physical metric and extrinsic curvature
 	FOR2(i,j) gammaLLFinal[i][j] = gammaThomas[i][j] + TPFactor * (gamma_TP[i][j] - gammaThomas[i][j]);
 	FOR2(i,j) KLL[i][j] = KLLThomas[i][j] + TPFactor * (K_TP[i][j] - KLLThomas[i][j]);

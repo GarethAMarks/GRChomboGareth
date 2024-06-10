@@ -75,6 +75,7 @@ public:
         pp.load("G_Newton", bosonstar_params.Newtons_constant, 1.0);
 	pp.load("BS_bump_radius", bosonstar_params.BS_bump_radius, 10.0);
 	pp.load("BH_bump_radius", bosonstar_params.BH_bump_radius, 10.0);        
+	pp.load ("do_rotation", bosonstar_params.do_rotation, false);	
 
 	// Initialize values for bosonstar2_params to same as bosonstar_params
         // and then assign that ones that should differ below
@@ -187,8 +188,8 @@ public:
 
         #ifdef USE_TWOPUNCTURES
 
-	double v1 = tanh(bosonstar_params.BS_rapidity);
-	double v2 = -tanh(bosonstar2_params.BS_rapidity);
+	double v1 = -tanh(bosonstar_params.BS_rapidity);
+	double v2 = tanh(bosonstar2_params.BS_rapidity);
 	
 	double gamma1 = 1 / sqrt ( 1 - v1 * v1);
 	double gamma2 = 1 / sqrt ( 1 - v2 * v2);
@@ -197,7 +198,10 @@ public:
 	 
 	double q = bosonstar_params.mass_ratio;
         double d = bosonstar_params.BS_separation;
+	double b = bosonstar_params.BS_impact_parameter;
 
+	//amount the original configuration has been  rotated relative to x-axis parallel config. assumes impact param/ separation > 0. Needed to rotate BH momenta
+        double rotation_angle = asin(b / sqrt(d * d + b * b ));
 	
 	bool calculate_target_masses;
         pp.load("TP_calculate_target_masses", calculate_target_masses, false);
@@ -212,15 +216,15 @@ public:
             pout() << "The black holes have target ADM masses of "
                    << tp_params.target_M_plus << " and "
                    << tp_params.target_M_minus << "\n";
-            bh1_params.mass = tp_params.target_M_minus;
-            bh2_params.mass = tp_params.target_M_plus;
+            bh2_params.mass = tp_params.target_M_minus;
+            bh1_params.mass = tp_params.target_M_plus;
         }
         else
         {
             pp.load("TP_mass_plus", tp_params.par_m_plus);
             pp.load("TP_mass_minus", tp_params.par_m_minus);
-            bh2_params.mass = tp_params.par_m_plus;
-            bh1_params.mass = tp_params.par_m_minus;
+            bh1_params.mass = tp_params.par_m_plus;
+            bh2_params.mass = tp_params.par_m_minus;
             pout() << "The black holes have bare masses of "
                    << std::setprecision(16) << tp_params.par_m_plus << " and "
                    << tp_params.par_m_minus << "\n";
@@ -232,15 +236,31 @@ public:
 	std::array<double,3> momentum1{bosonstar_params.mass * gamma1 * v1, 0, 0};
 	std::array<double,3> momentum2{bosonstar_params.BlackHoleMass * gamma2 * v2, 0, 0};
 	
+	if (bosonstar_params.do_rotation)
+	{
+	
+	    pout() << "Doing TP coordinate rotation by angle " << rotation_angle << endl;
+	    //magnitudes of momenta (in x-axis dir in final but not TP coord system)
+	    double p1 = bosonstar_params.mass * gamma1 * v1;
+	    double p2 = bosonstar_params.BlackHoleMass * gamma2 * v2;
+
+	    //rotate into frame in which black holes are on x-axis as required for TwoPunctures; we'll undo when constructing initial data
+	    momentum1[0] = cos(rotation_angle) *p1;
+       	    momentum1[1] = -sin(rotation_angle) *p1;
+
+	    momentum2[0] = cos(rotation_angle) *p2;
+            momentum2[1] = sin(rotation_angle) *p2;
+	}
+
         std::array<double, CH_SPACEDIM> spin_minus, spin_plus;
-        pp.load("TP_momentum_minus", bh1_params.momentum, momentum1);
-        pp.load("TP_momentum_plus", bh2_params.momentum, momentum2);
+        pp.load("TP_momentum_minus", bh2_params.momentum, momentum2);
+        pp.load("TP_momentum_plus", bh1_params.momentum, momentum1);
         pp.load("TP_spin_plus", spin_plus);
         pp.load("TP_spin_minus", spin_minus);
         FOR(i)
         {
-            tp_params.par_P_minus[i] = bh1_params.momentum[i];
-            tp_params.par_P_plus[i] = bh2_params.momentum[i];
+            tp_params.par_P_minus[i] = bh2_params.momentum[i];
+            tp_params.par_P_plus[i] = bh1_params.momentum[i];
             tp_params.par_S_minus[i] = spin_minus[i];
             tp_params.par_S_plus[i] = spin_plus[i];
         }
@@ -300,9 +320,12 @@ public:
         pp.load("TP_Tiny", tp_params.TP_Tiny, 0.0);
         pp.load("TP_Extend_Radius", tp_params.TP_Extend_Radius, 0.0);
 
+	//total distance between BH and BS
+	double total_sep = sqrt(d*d + b*b);
+
         // BH positions
-        pp.load("TP_offset_minus", tp_offset_minus, - d / (q + 1));
-        pp.load("TP_offset_plus", tp_offset_plus, q * d / (q + 1));
+        pp.load("TP_offset_minus", tp_offset_minus,  -total_sep / (q + 1));
+        pp.load("TP_offset_plus", tp_offset_plus, q * total_sep / (q + 1));
         bh1_params.center = center;
         bh2_params.center = center;
         bh1_params.center[0] += tp_offset_minus;
