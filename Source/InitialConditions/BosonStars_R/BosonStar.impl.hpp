@@ -800,7 +800,7 @@ void BosonStar::compute(Cell<data_t> current_cell) const
             TPFactor = 0;
 
 
-	//want to rotate these
+	//rotated coordinates to extract data from TPAMR
 	double coords_array[CH_SPACEDIM];
     	coords_array[0] = coords.x;
     	coords_array[1] = coords.y;
@@ -812,11 +812,11 @@ void BosonStar::compute(Cell<data_t> current_cell) const
         //pout() << "Rotation angle = " << rotation_angle << ", coords = " <<coords.x << ", " << coords.y << ", " << coords.z << endl;
 	//pout() << "x_star = " << x_star << ", x_hole = "<< x_hole << endl;
 
- 	//rotate by -rotation_angle to obtain coordinates of source point in TP system-- cut off at large r_hole is an ad hoc solution to prevent accessing illegal coordinates at corners for now
-	if (m_params_BosonStar.do_rotation && r_hole < R_BH * 25)
+ 	//rotate by rotation_angle to obtain coordinates of source point in TP system-- cut off at large r_hole is an ad hoc solution to prevent accessing illegal coordinates at corners for now
+	if (m_params_BosonStar.do_rotation /*&& r_hole < R_BH * 25*/)
 	{
-	coords_array[0] = cos(rotation_angle) * coords.x + sin(rotation_angle) * coords.y;
-	coords_array[1] = -sin(rotation_angle) * coords.x + cos(rotation_angle) * coords.y;
+	coords_array[0] = cos(rotation_angle) * coords.x - sin(rotation_angle) * coords.y;
+	coords_array[1] = sin(rotation_angle) * coords.x + cos(rotation_angle) * coords.y;
 	
 	}	
 

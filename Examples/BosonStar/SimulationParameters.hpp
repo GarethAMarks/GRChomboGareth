@@ -15,7 +15,10 @@
 #include "BosonStarParams.hpp"
 #include "AngMomFluxParams.hpp"
 #include  "BoostedBH.hpp"
+
+#ifdef USE_TWOPUNCTURES
 #include "TP_Parameters.hpp"
+#endif
 
 class SimulationParameters : public SimulationParametersBase
 {
@@ -246,7 +249,7 @@ public:
 
 	    //rotate into frame in which black holes are on x-axis as required for TwoPunctures; we'll undo when constructing initial data
 	    momentum1[0] = cos(rotation_angle) *p1;
-       	    momentum1[1] = -sin(rotation_angle) *p1;
+       	    momentum1[1] = sin(rotation_angle) *p1;
 
 	    momentum2[0] = cos(rotation_angle) *p2;
             momentum2[1] = sin(rotation_angle) *p2;
