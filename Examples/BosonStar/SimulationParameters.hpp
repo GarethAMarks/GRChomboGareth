@@ -241,7 +241,8 @@ public:
 	
 	if (bosonstar_params.do_rotation)
 	{
-	
+	 
+
 	    pout() << "Doing TP coordinate rotation by angle " << rotation_angle << endl;
 	    //magnitudes of momenta (in x-axis dir in final but not TP coord system)
 	    double p1 = bosonstar_params.mass * gamma1 * v1;
@@ -253,6 +254,8 @@ public:
 
 	    momentum2[0] = cos(rotation_angle) *p2;
             momentum2[1] = sin(rotation_angle) *p2;
+
+
 	}
 
         std::array<double, CH_SPACEDIM> spin_minus, spin_plus;

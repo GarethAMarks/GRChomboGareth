@@ -14,8 +14,11 @@
 #include "WeightFunction.hpp"
 #include "DebuggingTools.hpp"
 #include "Max.hpp"
+
+#ifdef USE_TWOPUNCTURES
 #include "TwoPunctures.hpp" //for TwoPunctures-based ID method
 #include "TPAMR.hpp"
+#endif
 
 inline BosonStar::BosonStar(BosonStar_params_t a_params_BosonStar, BosonStar_params_t a_params_BosonStar2,
                     Potential::params_t a_params_potential, double a_G_Newton,
