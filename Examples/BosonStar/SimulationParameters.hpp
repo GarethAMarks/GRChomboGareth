@@ -250,7 +250,6 @@ public:
 
 	    //rotate into frame in which black holes are on x-axis as required for TwoPunctures; we'll undo when constructing initial data
 	    
-	    //seems to work onyl without this-- not clear why
 	    momentum1[0] = cos(rotation_angle) *p1;
        	    momentum1[1] = sin(rotation_angle) *p1;
 
